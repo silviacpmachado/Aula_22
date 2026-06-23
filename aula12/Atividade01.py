@@ -32,7 +32,6 @@ try:
     print('\nObtendo informações sobre recuperação de veículos...')
 
     array = np.array(df_recuperacao['recuperacao_veiculos'])
-
     media = np.mean(array)
     mediana = np.median(array)
     distancia = abs((media - mediana) / mediana * 100)
@@ -43,7 +42,7 @@ try:
     print(f'Mediana: {mediana}')
     print(f'Distância Média vs Mediana: {distancia}%')
 
-    # Quartis
+    # Obtendo os quartis
     q1 = np.quantile(array, 0.25)
     q2 = np.quantile(array, 0.50)
     q3 = np.quantile(array, 0.75)
@@ -54,8 +53,10 @@ try:
     print(f'Q2: {q2}')
     print(f'Q3: {q3}')
 
-    # filtros
+    # menores
     df_menores = df_recuperacao[df_recuperacao['recuperacao_veiculos'] < q1]
+
+    # maiores
     df_maiores = df_recuperacao[df_recuperacao['recuperacao_veiculos'] > q3]
 
     print('\nCISPs com Maiores Recuperações')
@@ -70,7 +71,11 @@ except Exception as e:
     print(f'Erro ao calcular estatísticas: {e}')
 
 
-# DISPERSÃO
+# MEDIDAS DE DISPERSÃO
+# Amplitude Total = maior_valor - menor_valor
+# Quanto mais próximo de zero, maior a homogeneidade dos dados
+# Se for igual a 0, todos os dados são iguais
+# Quanto mais próximo do maior valor, maior a dispersão
 
 try:
     maximo = np.max(array)
@@ -88,29 +93,42 @@ except Exception as e:
 
 
 # OUTLIERS
+#   IQR (Intervalo Interquartil)
+#   É a amplitude dos 50% dos dados mais centrais
+#   IQR = q3 - q1
+#   Ele ignora os valores mais extremos, max e min estão fora.
+#   Não sofre influência dos extremos
+#   Quanto mais próximo de zero, maior a homogeneidade dos dados
+#   Se for igual a 0, todos os dados são iguais
+#   Quanto mais próximo do Q3, maior a dispersão
 
 try:
     iqr = q3 - q1
 
+ # limite inferior
     limite_inferior = q1 - (1.5 * iqr)
+
+# limite superior
     limite_superior = q3 + (1.5 * iqr)
 
-    out_sup = df_recuperacao[df_recuperacao['recuperacao_veiculos'] > limite_superior]
-    out_inf = df_recuperacao[df_recuperacao['recuperacao_veiculos'] < limite_inferior]
+# outliers
+
+    df_recuperacao_outliers_superiores = df_recuperacao[df_recuperacao['recuperacao_veiculos'] > limite_superior]
+    df_recuperacao_outliers_inferiores = df_recuperacao[df_recuperacao['recuperacao_veiculos'] < limite_inferior]
 
     print('\nOutliers Superiores')
     print(40 * '=')
-    print(out_sup)
+    print(df_recuperacao_outliers_superiores)
 
     print('\nOutliers Inferiores')
     print(40 * '=')
-    print(out_inf if len(out_inf) > 0 else 'Não existem outliers inferiores')
+    print(df_recuperacao_outliers_inferiores if len(df_recuperacao_outliers_inferiores) > 0 else 'Não existem outliers inferiores')
 
 except Exception as e:
     print(f'Erro nos outliers: {e}')
 
 
-# ASSIMETRIA E CURTOSE
+# CALCULANDO ASSIMETRIA E CURTOSE
 
 
 try:
@@ -126,7 +144,7 @@ except Exception as e:
     print(f'Erro na distribuição: {e}')
 
 
-# VARIABILIDADE
+# Medidas de Dispersão "Variabilidade"
 
 
 try:
@@ -144,31 +162,31 @@ except Exception as e:
     print(f'Erro na variabilidade: {e}')
 
 
-# VISUALIZAÇÃO
+# Visualizando os dados
 
 
 try:
     plt.figure(figsize=(16, 8))
 
-    # TOP 10
+    # 1 Maiores
     plt.subplot(2, 2, 1)
     top10 = df_recuperacao.head(10).sort_values(by='recuperacao_veiculos')
     plt.barh(top10['cisp'], top10['recuperacao_veiculos'])
     plt.title('Top 10 CISPs - Recuperação')
 
-    # HISTOGRAMA
+    # P/ printar as faixas de intervalo do Histograma
     plt.subplot(2, 2, 2)
     plt.hist(array, bins=30)
     plt.axvline(media, color='green')
     plt.axvline(mediana, color='orange')
     plt.title('Distribuição das Recuperações')
 
-    # BOXPLOT
+     # POSIÇÃO 3 - BOXPLOT
     plt.subplot(2, 2, 3)
     plt.boxplot(array, vert=False)
     plt.title('Boxplot')
 
-    # RESUMO
+    # POSIÇÃO 4 - MEDIDAS ESTATÍSTICAS
     plt.subplot(2, 2, 4)
     plt.text(0.1, 0.9, f'Média: {media:.2f}')
     plt.text(0.1, 0.8, f'Mediana: {mediana:.2f}')

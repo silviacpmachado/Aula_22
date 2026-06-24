@@ -165,41 +165,98 @@ except Exception as e:
 # Visualizando os dados
 
 
+# Visualizando os dados de forma otimizada
 try:
-    plt.figure(figsize=(16, 8))
-
-    # 1 Maiores
+    # Aumentamos um pouco a altura para dar mais "respiro" entre os elementos
+    plt.figure(figsize=(16, 10))
+    
+    # POSIÇÃO 1 - TOP 10 CISPs (Ajustado para não embolar texto)
     plt.subplot(2, 2, 1)
-    top10 = df_recuperacao.head(10).sort_values(by='recuperacao_veiculos')
-    plt.barh(top10['cisp'], top10['recuperacao_veiculos'])
-    plt.title('Top 10 CISPs - Recuperação')
+    top10 = df_recuperacao.nlargest(10, 'recuperacao_veiculos')
+    top10 = top10.sort_values('recuperacao_veiculos')
+    
+    bars = plt.barh(
+        top10['cisp'].astype(str), 
+        top10['recuperacao_veiculos'], 
+        color='#1f77b4', 
+        edgecolor='black',
+        height=0.6
+    )
 
-    # P/ printar as faixas de intervalo do Histograma
+    # Adiciona os rótulos de texto com um espaçamento dinâmico seguro
+    max_value = top10['recuperacao_veiculos'].max()
+    for bar in bars:
+        width = bar.get_width()
+        plt.text(
+            width + (max_value * 0.02),  # 2% de margem dinâmica à direita da barra
+            bar.get_y() + bar.get_height()/2,
+            f'{int(width):,}',
+            va='center',
+            ha='left',
+            fontsize=10,
+            weight='bold'
+        )
+        
+    plt.title('Top 10 CISPs com Maior Recuperação de Veículos', fontsize=12, weight='bold', pad=15)
+    plt.xlabel('Veículos Recuperados', fontsize=10)
+    plt.ylabel('Número da CISP', fontsize=10)
+    # Aumenta o limite do eixo X para o texto do último colocado não ser cortado
+    plt.xlim(0, max_value * 1.15)
+    plt.grid(axis='x', alpha=0.3, linestyle='--')
+ 
+    # POSIÇÃO 2 - HISTOGRAMA (Com legenda explicativa)
     plt.subplot(2, 2, 2)
-    plt.hist(array, bins=30)
-    plt.axvline(media, color='green')
-    plt.axvline(mediana, color='orange')
-    plt.title('Distribuição das Recuperações')
+    plt.hist(array, bins=25, color='#d62728', edgecolor='black', alpha=0.7)
+    plt.axvline(media, color='green', linestyle='--', linewidth=2, label=f'Média: {media:.1f}')
+    plt.axvline(mediana, color='orange', linestyle='-', linewidth=2, label=f'Mediana: {mediana:.1f}')
+    plt.title('Distribuição e Concentração das Recuperações', fontsize=12, weight='bold', pad=15)
+    plt.xlabel('Volume de Veículos Recuperados', fontsize=10)
+    plt.ylabel('Quantidade de CISPs', fontsize=10)
+    plt.legend(fontsize=10, loc='upper right')
+    plt.grid(axis='y', alpha=0.3, linestyle='--')
 
-     # POSIÇÃO 3 - BOXPLOT
+    # POSIÇÃO 3 - BOXPLOT (Substituído o parâmetro incorreto por vert=False)
     plt.subplot(2, 2, 3)
-    plt.boxplot(array, vert=False)
-    plt.title('Boxplot')
+    plt.boxplot(
+        array, 
+        vert=False,          # CORREÇÃO CRÍTICA: vert=False em vez de orientation
+        patch_artist=True, 
+        notch=False,
+        boxprops=dict(facecolor='#2ca02c', color='black', alpha=0.7),
+        flierprops=dict(marker='o', markerfacecolor='black', markersize=6, linestyle='none')
+    )
+    plt.title('Identificação Estatística de Outliers', fontsize=12, weight='bold', pad=15)
+    plt.xlabel('Veículos Recuperados', fontsize=10)
+    # Remove as marcações desnecessárias do eixo Y do boxplot deitado
+    plt.yticks([]) 
+    plt.grid(axis='x', alpha=0.3, linestyle='--')
 
-    # POSIÇÃO 4 - MEDIDAS ESTATÍSTICAS
+    # POSIÇÃO 4 - CARD DE MÉTRICAS (Formatado como tabela limpa)
     plt.subplot(2, 2, 4)
-    plt.text(0.1, 0.9, f'Média: {media:.2f}')
-    plt.text(0.1, 0.8, f'Mediana: {mediana:.2f}')
-    plt.text(0.1, 0.7, f'Amplitude: {amplitude}')
-    plt.text(0.1, 0.6, f'Q1: {q1}')
-    plt.text(0.1, 0.5, f'Q3: {q3}')
-    plt.text(0.1, 0.4, f'IQR: {iqr}')
-    plt.text(0.1, 0.3, f'Assimetria: {assimetria}')
-    plt.text(0.1, 0.2, f'Curtose: {curtose}')
-    plt.axis('off')
+    plt.title('Relatório Estatístico Consolidado', fontsize=12, weight='bold', pad=15)
+    
+    # Criamos um texto estilizado simulando um painel/card
+    texto_metricas = (
+        f"🔹 Tendência Central:\n"
+        f"  • Média: {media:,.2f}\n"
+        f"  • Mediana: {mediana:,.2f}\n"
+        f"  • Distância Média/Mediana: {distancia:.1f}%\n\n"
+        f"🔹 Posição e Dispersão:\n"
+        f"  • Q1 (25%): {q1:,.2f}  |  Q3 (75%): {q3:,.2f}\n"
+        f"  • Amplitude Total: {amplitude:,}\n"
+        f"  • IQR (Intervalo Interquartil): {iqr:,.2f}\n\n"
+        f"🔹 Formato da Curva:\n"
+        f"  • Assimetria (Skew): {assimetria:.2f}\n"
+        f"  • Curtose: {curtose:.2f}\n"
+        f"  • Coef. de Variação: {coef_variacao:.2f} ({coef_variacao*100:.1f}%)"
+    )
+    
+    plt.text(0.05, 0.85, texto_metricas, fontsize=11, family='monospace', va='top', ha='left', linespacing=1.5)
+    plt.axis('off') # Remove as bordas do gráfico para parecer um card de texto
 
-    plt.tight_layout()
+    # O tight_layout organiza o espaçamento entre os subplots automaticamente
+    plt.tight_layout(pad=3.0)
     plt.show()
 
 except Exception as e:
-    print(f'Erro nos gráficos: {e}')
+    print(f'Erro ao renderizar os gráficos atualizados: {e}')

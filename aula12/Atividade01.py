@@ -38,13 +38,13 @@ try:
 
     print('\nMedidas de Tendência Central')
     print(40 * '=')
-    print(f'Média: {media}')
+    print(f'Média: {media}') # A média é de 3.820 veiculos e a mediana de 1.610. Metade das delegacias recupera até este numero(1610,) de veic
     print(f'Mediana: {mediana}')
     print(f'Distância Média vs Mediana: {distancia}%')
 
     # Obtendo os quartis
-    q1 = np.quantile(array, 0.25)
-    q2 = np.quantile(array, 0.50)
+    q1 = np.quantile(array, 0.25) - # q1 284,25
+    q2 = np.quantile(array, 0.50) 
     q3 = np.quantile(array, 0.75)
 
     print('\nMedidas de Posição')
@@ -111,7 +111,7 @@ try:
 # limite superior
     limite_superior = q3 + (1.5 * iqr)
 
-# outliers
+# outliers (delegacias fora do padrão)
 
     df_recuperacao_outliers_superiores = df_recuperacao[df_recuperacao['recuperacao_veiculos'] > limite_superior]
     df_recuperacao_outliers_inferiores = df_recuperacao[df_recuperacao['recuperacao_veiculos'] < limite_inferior]
@@ -129,7 +129,7 @@ except Exception as e:
 
 
 # CALCULANDO ASSIMETRIA E CURTOSE
-
+#Assimetria de 2.62 (assimetria positiva grande) e curtose de 8.10. (cauda pesada c/ valores extremos) a distribuição não é normal.
 
 try:
     assimetria = df_recuperacao['recuperacao_veiculos'].skew()
